@@ -10,7 +10,11 @@ import (
 	"os/signal"
 	"syscall"
 )
+/*
+This routine is for forever data mechine cancel and drain
+*/
 
+//	pump generate data then push it into chan in
 func pump(in chan string, wg *sync.WaitGroup) {
 	fmt.Println("pump start")
 	defer wg.Done()
@@ -44,6 +48,7 @@ func pump(in chan string, wg *sync.WaitGroup) {
 	fmt.Println("pump wg.Done")
 }
 
+//process get data from out then process
 func process(out chan string, wg *sync.WaitGroup) {
 	processLoop:
 	for {
@@ -65,6 +70,8 @@ func process(out chan string, wg *sync.WaitGroup) {
 	fmt.Println("process wg.Done")
 	wg.Done()
 }
+
+//cache for cache data
 func cache(in, out chan string,wg *sync.WaitGroup) {
 	c := list.New()
 
@@ -114,7 +121,9 @@ func cache(in, out chan string,wg *sync.WaitGroup) {
 }
 
 var (
+	//closeQue is the chan for close the data mechine immediately
 	closeQue chan interface{}=make(chan interface{})
+	//doneQue is the chan for close the data mechine before data in list drain 
 	doneQue chan interface{}=make(chan interface{})
 )
 
@@ -135,7 +144,8 @@ func main() {
 	go cache(in,out, &wg)
 
 	sigQue := make(chan os.Signal)
-    //  signal.Notify(lb.ch, syscall.SIGUSR1,syscall.SIGINT,syscall.SIGTERM)
+
+	//Notify me if user press Ctrl-C(SIGINT), Ctrl-\(SIGQUIT)
     signal.Notify(sigQue, syscall.SIGINT,syscall.SIGQUIT)
     go func (){
 		v:=<-sigQue
@@ -144,7 +154,7 @@ func main() {
 			fmt.Println("SIGINT received")
 			closeQue<-nil
 		case syscall.SIGQUIT:
-			fmt.Println("SIGHUP received")
+			fmt.Println("SIGQUIT received")
 			doneQue<-nil
 		}
     }()
