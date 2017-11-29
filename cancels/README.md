@@ -1,1 +1,2 @@
-This is a web scraper, dig web recursively
+Test for golang chan cancel and drain
+
